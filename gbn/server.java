@@ -6,7 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-/**
+/*
  * 服务器端
  */
 public class server {
@@ -17,6 +17,7 @@ public class server {
 
     public server() throws IOException {
 
+    	    System.out.println("server working ......");
             try {
                 datagramSocket = new DatagramSocket(port);
                 while (true) {
@@ -27,16 +28,17 @@ public class server {
                     String received = new String(receivedData, 0, receivedData.length);//offset是初始偏移量
                     System.out.println(received);
                     //收到了预期的数据
-                    if (Integer.parseInt(received.substring(received.indexOf("编号:") + 3).trim()) == exceptedSeq) {
+                    if (Integer.parseInt(received.substring(received.indexOf(":") + 1).trim()) == exceptedSeq) {
                         //发送ack
-                        sendAck(exceptedSeq);
-                        System.out.println("服务端期待的数据编号:" + exceptedSeq);
+                        sendAck(exceptedSeq);                        
+                        System.out.println("server expected seq:" + exceptedSeq);
+                        System.out.println("send ACK "+exceptedSeq+" in rerturn");
                         //期待值加1
                         exceptedSeq++;
                         System.out.println('\n');
                     } else {
-                        System.out.println("服务端期待的数据编号:" + exceptedSeq);
-                        System.out.println("+++++++++++++++++++++未收到预期数据+++++++++++++++++++++");
+                        System.out.println("server expected seq:" + exceptedSeq);
+                        System.out.println("+++++++++++++++++++++server don't get data it wanted+++++++++++++++++++++");
                         //仍发送之前的ack
                         sendAck(exceptedSeq - 1);
                         System.out.println('\n');

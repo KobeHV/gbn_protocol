@@ -22,11 +22,12 @@ public class timer extends Thread {
                 try {
                     Thread.sleep(time*1000);
 
-                    System.out.println("\n");
+                    System.out.println("check if timeout......");
                     if(gbnClient != null){
-                    	System.out.println("GBN客户端等待ACK超时");
+                    	System.out.println("GBN wait ACK timeout");
                         gbnClient.timeOut();
-                    }else{                        
+                    }else{            
+                    	System.out.println("The project has finished.");
                     }
                     Model.setTime(0);
 

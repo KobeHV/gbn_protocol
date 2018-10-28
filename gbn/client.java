@@ -23,6 +23,7 @@ public class client {
 	private int base = 1;
 	private int N = 5;
 
+	//private client Client;
 	private final int MaxSeq = 10;
 	private final int lostSeq = 3;
 
@@ -31,6 +32,7 @@ public class client {
 		Timer = new timer(this, Model);
 		Model.setTime(0);
 		Timer.start();
+		System.out.println("client working \n......");
 		while (true) {
 			// 向服务器端发送数据
 			sendData();
@@ -48,16 +50,19 @@ public class client {
 				// 开始计时器
 				Model.setTime(3);
 			}
-			System.out.println("从服务器获得的数据:" + fromServer);
+			System.out.println("from server get:" + fromServer);
 			System.out.println("\n");
+			if(ack == MaxSeq) {
+				System.out.println("ACK:" + ack+" the project will be down");
+				System.exit(-1);
+			}
 		}
 
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {		
+		
 		new client();
-		new server();
-
 	}
 
 	/*
@@ -68,14 +73,14 @@ public class client {
 	private void sendData() throws Exception {
 		inetAddress = InetAddress.getLocalHost();
 		while (nextSeq < base + N && nextSeq <= MaxSeq) {
-			// 不发编号为3的数据，模拟数据丢失
+			// 不发编号为lostseq的数据，模拟数据丢失
 			if (nextSeq == lostSeq) {
 				nextSeq++;
 				continue;
 			}
 
-			String clientData = "客户端发送的数据编号:" + nextSeq;
-			System.out.println("向服务器发送的数据:" + nextSeq);
+			String clientData = "client send the seq:" + nextSeq;
+			System.out.println("send to server data:" + nextSeq);
 
 			byte[] data = clientData.getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(data, data.length, inetAddress, port);
@@ -83,6 +88,7 @@ public class client {
 
 			if (nextSeq == base) {
 				// 开始计时
+				System.out.println("time begin......");
 				Model.setTime(3);
 			}
 			nextSeq++;
@@ -94,8 +100,8 @@ public class client {
 	 */
 	public void timeOut() throws Exception {
 		for (int i = base; i < nextSeq; i++) {
-			String clientData = "客户端重新发送的数据编号:" + i;
-			System.out.println("向服务器重新发送的数据:" + i);
+			String clientData = "client send the repeat seq:" + i;
+			System.out.println("send to server repeat data:" + i);
 			byte[] data = clientData.getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(data, data.length, inetAddress, port);
 			datagramSocket.send(datagramPacket);
