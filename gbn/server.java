@@ -17,7 +17,7 @@ public class server {
 
     public server() throws IOException {
 
-    	    System.out.println("server working ......");
+    	    System.out.println("server working \n......");
             try {
                 datagramSocket = new DatagramSocket(port);
                 while (true) {

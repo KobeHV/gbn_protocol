@@ -25,7 +25,7 @@ public class client {
 
 	//private client Client;
 	private final int MaxSeq = 10;
-	private final int lostSeq = 3;
+	private final int lostSeq = 4;
 
 	public client() throws Exception {
 		Model = new model();
