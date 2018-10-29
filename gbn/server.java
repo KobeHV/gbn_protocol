@@ -12,6 +12,9 @@ import java.net.SocketException;
 public class server {
 	private final int port = 80;
 	private final int MaxSeq = 10;
+	private final int lostAck = 9;
+	private int cnt = 0;
+	private int ack = 0;
 	private DatagramSocket datagramSocket;
 	private DatagramPacket datagramPacket;
 	private int exceptedSeq = 1;
@@ -29,16 +32,21 @@ public class server {
 				String received = new String(receivedData, 0, receivedData.length);// offset是初始偏移量
 				System.out.println(received);
 				// 收到了预期的数据
-				if (Integer.parseInt(received.substring(received.indexOf(":") + 1).trim()) == exceptedSeq) {
+				ack = Integer.parseInt(received.substring(received.indexOf(":") + 1).trim());
+				if (ack == lostAck && cnt == 0) {
+					cnt++;
+					continue;
+				}
+				if (ack == exceptedSeq) {
 					// 发送ack
 					sendAck(exceptedSeq);
 					System.out.println("server expected seq:" + exceptedSeq);
 					System.out.println("send ACK " + exceptedSeq + " in rerturn");
 					if (exceptedSeq == MaxSeq) {
 						System.out.println("\nAll the ACK has sent :)");
-						
+
 						System.exit(-1);
-					}					// 期待值加1
+					} // 期待值加1
 					exceptedSeq++;
 					System.out.println('\n');
 				} else {
@@ -61,11 +69,12 @@ public class server {
 	// 向客户端发送ack
 	public void sendAck(int ack) throws IOException {
 		String response = " ack:" + ack;
+
 		byte[] responseData = response.getBytes();
 		InetAddress responseAddress = datagramPacket.getAddress();
 		int responsePort = datagramPacket.getPort();
 		datagramPacket = new DatagramPacket(responseData, responseData.length, responseAddress, responsePort);
 		datagramSocket.send(datagramPacket);
-		
+
 	}
 }

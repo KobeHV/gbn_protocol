@@ -103,7 +103,8 @@ public class client {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			try {
-				System.out.println("\n"+seq + "-TimeOut!!!\nRetransmission:");
+				System.out.println();
+				System.out.println(seq + "-TimeOut!!!\nRetransmission:");
 				Client.timeOut();
 			} catch (Exception e1) {
 				e1.printStackTrace();
