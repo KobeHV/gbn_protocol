@@ -1,12 +1,11 @@
 package gbn;
 
-import timer.model;
-import timer.timer;
-
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Timer;
 /*
  * 客户端
  */
@@ -16,22 +15,16 @@ public class client {
 	private DatagramSocket datagramSocket = new DatagramSocket();
 	private DatagramPacket datagramPacket;
 	private InetAddress inetAddress;
-	private model Model;
-	// private static client gbnClient;
-	private timer Timer;
 	private int nextSeq = 1;
 	private int base = 1;
 	private int N = 5;
-
-	//private client Client;
+	private volatile int ack = 0;
 	private final int MaxSeq = 10;
-	private final int lostSeq = 4;
+	private final int lostSeq = 3;
+	Timer[] timers = new Timer[MaxSeq + 1];
 
 	public client() throws Exception {
-		Model = new model();
-		Timer = new timer(this, Model);
-		Model.setTime(0);
-		Timer.start();
+
 		System.out.println("client working \n......");
 		while (true) {
 			// 向服务器端发送数据
@@ -41,27 +34,21 @@ public class client {
 			datagramPacket = new DatagramPacket(bytes, bytes.length);
 			datagramSocket.receive(datagramPacket);
 			String fromServer = new String(bytes, 0, bytes.length);
-			int ack = Integer.parseInt(fromServer.substring(fromServer.indexOf("ack:") + 4).trim());
+			ack = Integer.parseInt(fromServer.substring(fromServer.indexOf("ack:") + 4).trim());
+			timers[ack].stop();
 			base = ack + 1;
-			if (base == nextSeq) {
-				// 停止计时器
-				Model.setTime(0);
-			} else {
-				// 开始计时器
-				Model.setTime(3);
-			}
-			System.out.println("from server get:" + fromServer);
-			System.out.println("\n");
-			if(ack == MaxSeq) {
-				System.out.println("ACK:" + ack+" the project will be down");
+
+			System.out.println("\nfrom server get:" + fromServer);
+			if (ack == MaxSeq) {
+				System.out.println("all the ACK has got :)");
 				System.exit(-1);
 			}
 		}
 
 	}
 
-	public static void main(String[] args) throws Exception {		
-		
+	public static void main(String[] args) throws Exception {
+
 		new client();
 	}
 
@@ -74,6 +61,8 @@ public class client {
 		inetAddress = InetAddress.getLocalHost();
 		while (nextSeq < base + N && nextSeq <= MaxSeq) {
 			// 不发编号为lostseq的数据，模拟数据丢失
+			timers[nextSeq] = new Timer(10000, new DelayActionListener(this, nextSeq));
+			timers[nextSeq].start();
 			if (nextSeq == lostSeq) {
 				nextSeq++;
 				continue;
@@ -85,12 +74,6 @@ public class client {
 			byte[] data = clientData.getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(data, data.length, inetAddress, port);
 			datagramSocket.send(datagramPacket);
-
-			if (nextSeq == base) {
-				// 开始计时
-				System.out.println("time begin......");
-				Model.setTime(3);
-			}
 			nextSeq++;
 		}
 	}
@@ -99,12 +82,33 @@ public class client {
 	 *** 超时数据重传
 	 */
 	public void timeOut() throws Exception {
-		for (int i = base; i < nextSeq; i++) {
+		for (int i = base; i < nextSeq && i > ack; i++) {
 			String clientData = "client send the repeat seq:" + i;
-			System.out.println("send to server repeat data:" + i);
+			System.out.println("\nsend to server repeat data:" + i);
 			byte[] data = clientData.getBytes();
 			DatagramPacket datagramPacket = new DatagramPacket(data, data.length, inetAddress, port);
 			datagramSocket.send(datagramPacket);
+		}
+	}
+
+	class DelayActionListener implements ActionListener {
+		client Client;
+		int seq;
+
+		public DelayActionListener(client Client, int seq) {
+			this.Client = Client;
+			this.seq = seq;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				System.out.println("\n"+seq + "-TimeOut!!!\nRetransmission:");
+				Client.timeOut();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			} finally {
+			}
 		}
 	}
 }
